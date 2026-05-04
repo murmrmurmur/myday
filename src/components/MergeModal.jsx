@@ -29,36 +29,48 @@ export default function MergeModal({ clips, label, onClose }) {
       setPhase('merging')
       setProgress(0)
 
-      // 1단계: WebM 클립을 하나씩 H.264 MP4로 변환
-      // (filter_complex는 seek table 없는 WebM을 동시에 열다 hang 발생)
+      // 1단계: WebM → MP4 개별 변환
+      // WebM(MediaRecorder)은 seek table/duration 없어 filter_complex가 hang → 하나씩 처리
+      // -r 30: VFR → CFR 변환 (VFR 유지 시 concat에서 재생속도 오류)
+      // -ar/-ac: 오디오 포맷 통일 (클립 간 samplerate/채널 불일치 방지)
+      // -avoid_negative_ts: 첫 PTS가 음수면 이후 타임스탬프 오프셋 누적 방지
       for (let i = 0; i < clips.length; i++) {
         setStepLabel(`${i + 1}/${clips.length} 변환 중`)
-        setProgress(Math.round((i / clips.length) * 85))
+        setProgress(Math.round((i / clips.length) * 80))
         await ffmpeg.writeFile(`clip${i}.webm`, await fetchFile(clips[i].blob))
         await ffmpeg.exec([
+          '-avoid_negative_ts', 'make_zero',
           '-i', `clip${i}.webm`,
           '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
-          '-c:a', 'aac',
-          '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+          '-r', '30',
+          '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac', '-ar', '44100', '-ac', '2',
           `clip${i}.mp4`,
         ])
         await ffmpeg.deleteFile(`clip${i}.webm`)
       }
 
-      // 2단계: MP4끼리 concat (duration 메타데이터 있어서 demuxer 정상 작동, -c copy로 즉시 완료)
+      // 2단계: MP4 → filter_complex concat → 최종 MP4
+      // MP4는 seek table/duration 있어 filter_complex hang 없음
+      // -c copy 대신 재인코딩: 클립 간 타임스탬프 오프셋을 완전히 정규화
       setStepLabel('합치는 중')
-      setProgress(88)
-      const concatContent = Array.from({ length: clips.length }, (_, i) => `file 'clip${i}.mp4'`).join('\n')
-      await ffmpeg.writeFile('list.txt', new TextEncoder().encode(concatContent))
+      setProgress(85)
+      const n = clips.length
+      const inputArgs = Array.from({ length: n }, (_, i) => ['-i', `clip${i}.mp4`]).flat()
+      const filterInputs = Array.from({ length: n }, (_, i) => `[${i}:v][${i}:a]`).join('')
+
       await ffmpeg.exec([
-        '-f', 'concat', '-safe', '0', '-i', 'list.txt',
-        '-c', 'copy',
+        ...inputArgs,
+        '-filter_complex', `${filterInputs}concat=n=${n}:v=1:a=1[v][a]`,
+        '-map', '[v]',
+        '-map', '[a]',
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
+        '-c:a', 'aac',
         '-movflags', '+faststart',
         'output.mp4',
       ])
 
-      for (let i = 0; i < clips.length; i++) await ffmpeg.deleteFile(`clip${i}.mp4`)
-      await ffmpeg.deleteFile('list.txt')
+      for (let i = 0; i < n; i++) await ffmpeg.deleteFile(`clip${i}.mp4`)
       setProgress(100)
 
       const data = await ffmpeg.readFile('output.mp4')
