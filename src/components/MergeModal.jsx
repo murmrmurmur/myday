@@ -36,13 +36,18 @@ export default function MergeModal({ clips, label, onClose }) {
         fileList.push(name)
       }
 
-      // concat list 생성
-      const concatContent = fileList.map((f) => `file '${f}'`).join('\n')
-      await ffmpeg.writeFile('list.txt', new TextEncoder().encode(concatContent))
+      // MediaRecorder WebM은 duration 메타데이터가 없어 concat demuxer가 첫 클립 이후 멈춤.
+      // filter_complex concat으로 스트림을 직접 이어 붙임.
+      const n = fileList.length
+      const inputArgs = fileList.flatMap((f) => ['-i', f])
+      const filterInputs = Array.from({ length: n }, (_, i) => `[${i}:v][${i}:a]`).join('')
+      const filterComplex = `${filterInputs}concat=n=${n}:v=1:a=1[v][a]`
 
-      // mp4로 변환
       await ffmpeg.exec([
-        '-f', 'concat', '-safe', '0', '-i', 'list.txt',
+        ...inputArgs,
+        '-filter_complex', filterComplex,
+        '-map', '[v]',
+        '-map', '[a]',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
         '-c:a', 'aac',
         '-movflags', '+faststart',
