@@ -1,0 +1,180 @@
+.archive-screen {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.archive-header {
+  padding: 52px 20px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid #f0f0f0;
+}
+
+.archive-title {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--black);
+  letter-spacing: -0.01em;
+}
+
+.archive-count {
+  font-size: 12px;
+  color: var(--gray-text);
+}
+
+.archive-cancel {
+  font-size: 13px;
+  color: var(--black);
+  font-weight: 500;
+}
+
+/* 스크롤 컨테이너 */
+.archive-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 80px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.archive-day {
+  padding: 20px 0 8px;
+}
+
+.archive-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 10px;
+}
+
+.archive-day-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--black);
+}
+
+.archive-daylog-btn {
+  font-size: 11px;
+  color: var(--gray-text);
+  border-bottom: 0.5px solid var(--gray-mid);
+  padding-bottom: 1px;
+}
+
+/* 카드 스냅 스크롤 */
+.clips-snap {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 10px;
+  padding: 0 20px;
+  scrollbar-width: none;
+}
+
+.clips-snap::-webkit-scrollbar {
+  display: none;
+}
+
+.clips-snap-item {
+  flex-shrink: 0;
+  width: calc(100vw - 60px);
+  scroll-snap-align: center;
+}
+
+/* 빈 상태 */
+.archive-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #bbb;
+}
+
+.archive-empty p {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.archive-empty button {
+  font-size: 13px;
+  color: var(--black);
+  border-bottom: 1px solid var(--black);
+  padding-bottom: 2px;
+}
+
+/* 하단 버튼 영역 */
+.archive-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 20px 36px;
+  background: linear-gradient(transparent, #fff 30%);
+}
+
+.archive-btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.archive-btn {
+  flex: 1;
+  height: 44px;
+  border: 0.5px solid #ddd;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--black);
+  background: #fff;
+  transition: background 0.1s;
+}
+
+.archive-btn:active {
+  background: var(--gray-light);
+}
+
+.archive-merge-confirm {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--black);
+  transition: opacity 0.15s;
+}
+
+.archive-merge-confirm:disabled {
+  background: #ccc;
+  color: #fff;
+}
+
+/* FAB */
+.archive-fab {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+  transition: transform 0.1s;
+}
+
+.archive-fab:active {
+  transform: scale(0.93);
+}

@@ -1,0 +1,172 @@
+.camera-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: stretch;
+  z-index: 100;
+}
+
+.camera-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.camera-center input {
+  pointer-events: all;
+}
+
+.camera-timestamp {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
+
+.camera-memo {
+  background: rgba(0, 0, 0, 0.3);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  width: 200px;
+}
+
+.camera-memo::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* 오른쪽 패널: 세로 가운데 정렬 */
+.camera-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.rec-progress-wrap {
+  width: 3px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.rec-progress-fill {
+  width: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transition: height 0.05s linear;
+}
+
+.rec-elapsed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.rec-hint {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.rec-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.rec-btn:active {
+  transform: scale(0.95);
+}
+
+.rec-btn--active {
+  border-color: var(--red-rec);
+}
+
+.rec-btn-inner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red-rec);
+  transition: border-radius 0.2s, width 0.2s, height 0.2s;
+}
+
+.rec-btn-inner--stop {
+  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+}
+
+.camera-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #fff;
+  font-size: 15px;
+}
+
+.camera-error button {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 2px;
+}
