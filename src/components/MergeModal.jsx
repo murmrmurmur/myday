@@ -7,6 +7,7 @@ export default function MergeModal({ clips, label, onClose }) {
   const ffmpegRef = useRef(null)
   const [phase, setPhase] = useState('idle')
   const [progress, setProgress] = useState(0)
+  const [stepLabel, setStepLabel] = useState('')
   const [downloadUrl, setDownloadUrl] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -28,31 +29,37 @@ export default function MergeModal({ clips, label, onClose }) {
       setPhase('merging')
       setProgress(0)
 
-      // 각 클립을 가상 파일시스템에 쓰기
-      const fileList = []
+      // 1단계: WebM 클립을 하나씩 H.264 MP4로 변환
+      // (filter_complex는 seek table 없는 WebM을 동시에 열다 hang 발생)
       for (let i = 0; i < clips.length; i++) {
-        const name = `clip${i}.webm`
-        await ffmpeg.writeFile(name, await fetchFile(clips[i].blob))
-        fileList.push(name)
+        setStepLabel(`${i + 1}/${clips.length} 변환 중`)
+        setProgress(Math.round((i / clips.length) * 85))
+        await ffmpeg.writeFile(`clip${i}.webm`, await fetchFile(clips[i].blob))
+        await ffmpeg.exec([
+          '-i', `clip${i}.webm`,
+          '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
+          '-c:a', 'aac',
+          '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+          `clip${i}.mp4`,
+        ])
+        await ffmpeg.deleteFile(`clip${i}.webm`)
       }
 
-      // MediaRecorder WebM은 duration 메타데이터가 없어 concat demuxer가 첫 클립 이후 멈춤.
-      // filter_complex concat으로 스트림을 직접 이어 붙임.
-      const n = fileList.length
-      const inputArgs = fileList.flatMap((f) => ['-i', f])
-      const filterInputs = Array.from({ length: n }, (_, i) => `[${i}:v][${i}:a]`).join('')
-      const filterComplex = `${filterInputs}concat=n=${n}:v=1:a=1[v][a]`
-
+      // 2단계: MP4끼리 concat (duration 메타데이터 있어서 demuxer 정상 작동, -c copy로 즉시 완료)
+      setStepLabel('합치는 중')
+      setProgress(88)
+      const concatContent = Array.from({ length: clips.length }, (_, i) => `file 'clip${i}.mp4'`).join('\n')
+      await ffmpeg.writeFile('list.txt', new TextEncoder().encode(concatContent))
       await ffmpeg.exec([
-        ...inputArgs,
-        '-filter_complex', filterComplex,
-        '-map', '[v]',
-        '-map', '[a]',
-        '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-        '-c:a', 'aac',
+        '-f', 'concat', '-safe', '0', '-i', 'list.txt',
+        '-c', 'copy',
         '-movflags', '+faststart',
         'output.mp4',
       ])
+
+      for (let i = 0; i < clips.length; i++) await ffmpeg.deleteFile(`clip${i}.mp4`)
+      await ffmpeg.deleteFile('list.txt')
+      setProgress(100)
 
       const data = await ffmpeg.readFile('output.mp4')
       const blob = new Blob([data.buffer], { type: 'video/mp4' })
@@ -101,7 +108,7 @@ export default function MergeModal({ clips, label, onClose }) {
         {(phase === 'loading' || phase === 'merging') && (
           <div className="merge-progress-area">
             <div className="merge-status">
-              {phase === 'loading' ? 'FFmpeg 로딩 중...' : `변환 중 ${progress}%`}
+              {phase === 'loading' ? 'FFmpeg 로딩 중...' : `${stepLabel} ${progress}%`}
             </div>
             <div className="merge-bar">
               <div className="merge-bar-fill"
