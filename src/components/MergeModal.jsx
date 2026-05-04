@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile } from '@ffmpeg/util'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 import './MergeModal.css'
 
 export default function MergeModal({ clips, label, onClose }) {
@@ -19,10 +19,10 @@ export default function MergeModal({ clips, label, onClose }) {
       ffmpegRef.current = ffmpeg
       ffmpeg.on('progress', ({ progress: p }) => setProgress(Math.round(p * 100)))
 
-      // public/ffmpeg/ 에서 직접 로드
+      const base = `${window.location.origin}/ffmpeg`
       await ffmpeg.load({
-        coreURL: '/ffmpeg/ffmpeg-core.js',
-        wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+        coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
       })
 
       setPhase('merging')
