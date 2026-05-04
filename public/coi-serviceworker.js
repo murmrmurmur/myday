@@ -1,7 +1,6 @@
-/* coi-serviceworker v0.1.7 - https://github.com/gzuidhof/coi-serviceworker */
+/* coi-serviceworker - Cross-Origin Isolation via Service Worker */
 (function () {
   if (typeof window === 'undefined') {
-    // Service Worker scope
     self.addEventListener('install', () => self.skipWaiting());
     self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
     self.addEventListener('fetch', function (event) {
@@ -12,6 +11,7 @@
           const newHeaders = new Headers(response.headers);
           newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
           newHeaders.set('Cross-Origin-Embedder-Policy', 'require-corp');
+          newHeaders.set('Cross-Origin-Resource-Policy', 'cross-origin');
           return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
@@ -21,22 +21,17 @@
       );
     });
   } else {
-    // Main thread scope
     if (window.crossOriginIsolated) return;
     if (!('serviceWorker' in navigator)) {
-      console.warn('coi-serviceworker: Service workers are not supported in this browser');
+      console.warn('coi-serviceworker: not supported');
       return;
     }
-    navigator.serviceWorker.register(document.currentScript ? document.currentScript.src : '/coi-serviceworker.js').then(
-      function (registration) {
-        console.log('coi-serviceworker registered');
+    navigator.serviceWorker
+      .register(document.currentScript ? document.currentScript.src : '/coi-serviceworker.js')
+      .then(function (registration) {
         if (!registration.active) {
           window.location.reload();
         }
-      },
-      function (err) {
-        console.error('coi-serviceworker registration failed:', err);
-      }
-    );
+      });
   }
 })();
